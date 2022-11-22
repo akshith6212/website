@@ -25,8 +25,7 @@ public class PasswordService {
         return bCryptPasswordEncoder.encode(rawPassword);
     }
 
-    public boolean checkPassword(Integer userId, String password) {
-        String hashedPassword = hashPassword(password);
-        return hashedPassword.equals(userService.findUser(userId).getPassword());
+    public boolean validatePassword(String rawPassword, String hash) {
+        return bCryptPasswordEncoder.matches(rawPassword, hash);
     }
 }

@@ -6,7 +6,10 @@ import dev.akshith6212.blog.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 @RestController
@@ -21,7 +24,13 @@ public class UserController {
 
     @GetMapping("/")
     public ModelAndView main() {
-        return login();
+        // check if user is authenticated
+        if(3!=5) {
+            ModelAndView homeView = new ModelAndView();
+            homeView.setViewName("home");
+            return homeView;
+        }
+        return new ModelAndView("login");
     }
 
     @GetMapping("/login")
@@ -35,26 +44,14 @@ public class UserController {
     @PostMapping("/login")
     public ModelAndView login(@ModelAttribute final User user) {
         System.out.println(user);
-        ModelAndView loginView = new ModelAndView();
-        loginView.setViewName("login");
-        ModelAndView homeView = new ModelAndView();
-        homeView.setViewName("home");
         User userOriginal = userService.findUserByUsername(user.getUsername());
         if (userOriginal == null)
-            return loginView;
-        if (userOriginal.getPassword().equals(passwordService.hashPassword(user.getPassword()))) {
-//            user.
-            return homeView;
+            return new ModelAndView("redirect:/login");
+        if (passwordService.validatePassword(user.getPassword(), userOriginal.getPassword())) {
+            logger.info("Correct password!!");
+            return new ModelAndView("redirect:/");
         }
-        return loginView;
-    }
-
-    @PostMapping("/register")
-    public boolean register(@ModelAttribute final User user) {
-        System.out.println(user);
-        String hashPassword = passwordService.hashPassword(user.getPassword());
-        user.setPassword(hashPassword);
-        return userService.addUser(user);
+        return new ModelAndView("redirect:/login");
     }
 
     @GetMapping("/register")
@@ -63,5 +60,13 @@ public class UserController {
         modelAndView.setViewName("register");
 
         return modelAndView;
+    }
+
+    @PostMapping("/register")
+    public boolean register(@ModelAttribute final User user) {
+        System.out.println(user);
+        String hashPassword = passwordService.hashPassword(user.getPassword());
+        user.setPassword(hashPassword);
+        return userService.addUser(user);
     }
 }
